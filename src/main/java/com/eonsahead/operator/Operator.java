@@ -1,25 +1,36 @@
 package com.eonsahead.operator;
 
-class Operator {
+public class Operator {
 
-    private double[][] elements = new double[2][2];
+    private double[][] elements = new double[4][4];
 
     public Operator() {
-        this.elements[0][0] = 1.0;
-        this.elements[0][1] = 0.0;
-        this.elements[1][0] = 0.0;
-        this.elements[1][1] = 1.0;
+        this.identity();
     } // Operator()
 
-    public Operator(double m00, double m01,
-            double m10, double m11) {
-        this.elements[0][0] = m00;
-        this.elements[0][1] = m01;
-        this.elements[1][0] = m10;
-        this.elements[1][1] = m11;
-    } // Operator( double, double, double, double )
+    public double get(int row, int column) {
+        return this.elements[row][column];
+    } // get( int, int )
 
-    public void rotation(double angle) {
+    public void set(int row, int column, double value) {
+        this.elements[row][column] = value;
+    } // set( int, int, double )
+
+    public final void identity() {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                if (i == j) {
+                    this.set(i, j, 1.0);
+                } // if
+                else {
+                    this.set(i, j, 0.0);
+                } // else
+            } // for
+        } // for
+    } // identity()
+
+    public void rotationZ(double angle) {
+        this.identity();
         this.elements[0][0] = Math.cos(angle);
         this.elements[0][1] = -Math.sin(angle);
         this.elements[1][0] = Math.sin(angle);
@@ -27,59 +38,65 @@ class Operator {
     } // rotation( double )
 
     public Operator multiply(Operator otherOperator) {
-        double left00 = this.elements[0][0];
-        double left01 = this.elements[0][1];
-        double left10 = this.elements[1][0];
-        double left11 = this.elements[1][1];
+        Operator product = new Operator();
+        for( int row = 0; row < 4; row++ ) {
+            for( int column = 0; column < 4; column++ ) {
+                double sum = 0.0;
+                for( int k = 0; k < 4; k++ ) {
+                    sum += this.get( row, k) * otherOperator.get( k, column);
+                } // for
+                product.set( row, column, sum);
+            } // for
+        } // for
 
-        double right00 = otherOperator.elements[0][0];
-        double right01 = otherOperator.elements[0][1];
-        double right10 = otherOperator.elements[1][0];
-        double right11 = otherOperator.elements[1][1];
-
-        double p00 = left00 * right00 + left01 * right10;
-        double p01 = left00 * right01 + left01 * right11;
-        double p10 = left10 * right00 + left11 * right10;
-        double p11 = left10 * right01 + left11 * right11;
-        
-        return new Operator( p00, p01, p10, p11 );
+        return product;
     } // multiply( Operator )
 
-    public double get( int row, int column ) {
-        return this.elements[row][column];
-    } // get( int, int )
-    
+    private String rowToString( int row ) {
+        StringBuilder result = new StringBuilder();
+        
+        result.append( "(" );
+        for( int i = 0; i < 3; i++ ) {
+            result.append( this.get(row, i ));
+            result.append( ", ");
+        } // for
+        result.append( this.get(row, 3 ));
+        result.append( ")" );
+        
+        return result.toString();
+    }
     @Override
     public String toString() {
-        double m00 = this.elements[0][0];
-        double m01 = this.elements[0][1];
-        double m10 = this.elements[1][0];
-        double m11 = this.elements[1][1];
-
-        String row0 = "(" + m00 + "," + m01 + ")";
-        String row1 = "(" + m10 + "," + m11 + ")";
-
-        return "[" + row0 + ", " + row1 + "]";
+        StringBuilder result = new StringBuilder();
+        
+        result.append( "[" );
+        for( int i = 0; i < 3; i++ ) {
+            result.append( rowToString(i) );
+            result.append( "," );
+        } // for
+        result.append( rowToString(3));
+        result.append( "]" );
+        return result.toString();
     } // toString()
 
     public static void main(String[] args) {
         Operator identity = new Operator();
         System.out.println("Identity = " + identity);
-        
-        Operator product = identity.multiply( identity );
-        System.out.println( "Product = " + product );
-        
+
+        Operator product = identity.multiply(identity);
+        System.out.println("Product = " + product);
+
         Operator ccw = new Operator();
-        ccw.rotation( Math.PI/4 );
-        
+        ccw.rotationZ(Math.PI / 4);
+
         Operator cw = new Operator();
-        cw.rotation( -Math.PI/4 );
-        
-        Operator totalRotation = ccw.multiply( cw );
-        
-        System.out.println( "ccw = " + ccw );
-        System.out.println( "cw = " + cw );
-        System.out.println( "total rotation = " + totalRotation);
+        cw.rotationZ(-Math.PI / 4);
+
+        Operator totalRotation = ccw.multiply(cw);
+
+        System.out.println("ccw = " + ccw);
+        System.out.println("cw = " + cw);
+        System.out.println("total rotation = " + totalRotation);
     } // main( String [] )
 
 } // Operator
