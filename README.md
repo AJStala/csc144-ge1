@@ -1,0 +1,3 @@
+# csc144-ge1
+
+This is an exercise to help students learn how to create Java programs that define several cooperating classes.
